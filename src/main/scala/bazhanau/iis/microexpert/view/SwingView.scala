@@ -1,7 +1,5 @@
-package bazhanau.iis.microexpert
+package bazhanau.iis.microexpert.view
 
-import java.awt.{BorderLayout, GridLayout}
-import java.io.File
 import javax.swing._
 
 /**
