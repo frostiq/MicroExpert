@@ -7,7 +7,7 @@ import scala.util.parsing.combinator.RegexParsers
 /**
   * Created by a.bazhanau on 27.03.16.
   */
-object RulesParser extends RegexParsers {
+class RulesParser extends RegexParsers {
   def number: Parser[Int] = """\d+""".r ^^ { _.toInt  }
 
   def value : Parser[Value] = """\w+""".r ^^ {Value.apply}
@@ -16,12 +16,12 @@ object RulesParser extends RegexParsers {
 
   def predicate : Parser[Predicate] = "IS" ^^ {_ => Predicate.Is}
 
-  def sentence : Parser[Sentence] = attribute ~ predicate ~ value ^^ {
-    case attribute ~ predicate ~ value => Sentence(attribute, value, predicate)
+  def sentence : Parser[Statement] = attribute ~ predicate ~ value ^^ {
+    case attribute ~ predicate ~ value => Statement(attribute, value, predicate)
   }
 
-  def statement : Parser[Statement] = sentence ~ rep("AND" ~> sentence) ^^ {
-    case first ~ others => Statement((first :: others).toSet)
+  def statement : Parser[Sentence] = sentence ~ rep("AND" ~> sentence) ^^ {
+    case first ~ others => Sentence((first :: others).toSet)
   }
   
   def rule : Parser[Rule] = number ~ "IF" ~ statement ~ "THEN" ~ statement <~ elem('.') ^^ {
