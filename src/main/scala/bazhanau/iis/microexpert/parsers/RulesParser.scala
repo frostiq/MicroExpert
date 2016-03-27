@@ -8,11 +8,11 @@ import scala.util.parsing.combinator.RegexParsers
   * Created by a.bazhanau on 27.03.16.
   */
 object RulesParser extends RegexParsers {
-  def number: Parser[Int] = """\d+""" ^^ { _.toInt  }
+  def number: Parser[Int] = """\d+""".r ^^ { _.toInt  }
 
-  def value : Parser[Value] = """\w""" ^^ {Value.apply}
+  def value : Parser[Value] = """\w+""".r ^^ {Value.apply}
 
-  def attribute : Parser[Attribute] = """\w""" ^^ {Attribute.apply}
+  def attribute : Parser[Attribute] = """\w+""".r ^^ {Attribute.apply}
 
   def predicate : Parser[Predicate] = "IS" ^^ {_ => Predicate.Is}
 
@@ -28,4 +28,5 @@ object RulesParser extends RegexParsers {
     case num ~ _ ~ conditions ~ _ ~ conclusions => Rule(num, conditions, conclusions)
   }
 
+  def apply(input : String) = parseAll(rule+, input)
 }
