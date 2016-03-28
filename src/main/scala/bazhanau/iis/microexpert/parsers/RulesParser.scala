@@ -7,12 +7,17 @@ import scala.util.parsing.combinator.RegexParsers
 /**
   * Created by a.bazhanau on 27.03.16.
   */
-class RulesParser extends RegexParsers {
+object RulesParser extends RegexParsers {
+
+  override def skipWhitespace: Boolean = true
+
+  def wordRegex = """[а-яa-z0-9 ]*[а-яa-z0-9]""".r
+
   def number: Parser[Int] = """\d+""".r ^^ { _.toInt  }
 
-  def value : Parser[Value] = """\w+""".r ^^ {Value.apply}
+  def value : Parser[Value] = wordRegex ^^ {Value.apply}
 
-  def attribute : Parser[Attribute] = """\w+""".r ^^ {Attribute.apply}
+  def attribute : Parser[Attribute] = wordRegex ^^ {Attribute.apply}
 
   def predicate : Parser[Predicate] = "IS" ^^ {_ => Predicate.Is}
 
@@ -28,5 +33,5 @@ class RulesParser extends RegexParsers {
     case num ~ _ ~ conditions ~ _ ~ conclusions => Rule(num, conditions, conclusions)
   }
 
-  def apply(input : String) = parseAll(rule+, input)
+  def apply(input : String): ParseResult[List[Rule]] = parseAll(rule+, input)
 }
