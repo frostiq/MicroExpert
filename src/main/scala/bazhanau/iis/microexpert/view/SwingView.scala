@@ -16,6 +16,7 @@ object SwingView extends JFrame with App {
   val MAX_ANSWERS_SIZE: Int = 16
 
   val totalRulesLabel: JLabel = new JLabel("Всего правил: 0")
+  val attributeLabel: JLabel = new JLabel()
 
   val selectOptionButton: JButton = new JButton("Выбрать вариант")
   val optionButtons: Seq[JRadioButton] = Seq.fill(MAX_ANSWERS_SIZE)(new JRadioButton())
@@ -53,11 +54,13 @@ object SwingView extends JFrame with App {
     controlPanel.add(startButton)
 
     optionsPanel.setLayout(new GridLayout(MAX_ANSWERS_SIZE + 1, 1))
+    optionsPanel.add(attributeLabel)
     for (button <- optionButtons) {
       optionGroup.add(button)
       optionsPanel.add(button)
     }
     optionsPanel.add(selectOptionButton)
+
     cleanOptions()
 
 
@@ -70,6 +73,7 @@ object SwingView extends JFrame with App {
       val rules = parseRules(path)
       core = Some(new Core(rules))
       fillOptionsGroup(core.get.getTargets.map(_.value))
+      attributeLabel.setText("Выберите цель:")
     })
 
     selectOptionButton.addActionListener (() => {
@@ -117,7 +121,10 @@ object SwingView extends JFrame with App {
   def updateUI(result: Option[ConsultationResult]) =
     for(c: Core <- core)
       result match {
-        case Some(q : Question) => fillOptionsGroup(c.getOptions(q).map(_.value))
+        case Some(q : Question) => {
+          fillOptionsGroup(c.getOptions(q).map(_.value))}
+          val attr = q.targets.head.attribute.value
+          attributeLabel.setText(s"Укажите значение атрибута $attr:")
       }
 
   implicit class ActionListenerProxy(f: () => Unit) extends ActionListener {
