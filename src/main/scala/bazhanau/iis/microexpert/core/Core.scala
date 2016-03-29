@@ -9,7 +9,7 @@ import bazhanau.iis.microexpert.entities._
   */
 
 package object CoreTypes {
-  type TargetsStack = List[(Attribute, Int)]
+  type TargetsStack = List[Target]
   type Context = Map[Attribute, Statement]
 
   trait ConsultationResult
@@ -19,41 +19,43 @@ package object CoreTypes {
   case class NoAnswer() extends ConsultationResult
 
   case class Question(targets: TargetsStack, context: Context, rules: Set[Rule]) extends ConsultationResult
+
+  case class Target(attribute: Attribute, ruleNumber: Int = 0)
 }
 
 class Core(rules: Set[Rule]) {
 
   def consult(attribute: Attribute): ConsultationResult = {
-    consult(List((attribute, 0)), Map(), rules)
+    consult(List(Target(attribute)), Map(), rules)
   }
 
   def consult(q: Question, answer: Value): ConsultationResult = {
-    val ans = Statement(q.targets.head._1, answer)
+    val ans = Statement(q.targets.head.attribute, answer)
     consult(q.targets.tail, q.context + (ans.attribute -> ans), q.rules, afterAnswer = true)
   }
 
   def getTargets: Set[Attribute] = rules.flatMap(_.conclusion.statements).map(_.attribute)
 
   def getOptions(question: Question): Set[Value] =
-    rules.flatMap(_.condition.statements).filter(_.attribute == question.targets.head._1).map(_.value)
+    rules.flatMap(_.condition.statements).filter(_.attribute == question.targets.head.attribute).map(_.value)
 
   private def consult(targets: TargetsStack, context: Context, rules: Set[Rule], afterAnswer: Boolean = false): ConsultationResult = {
     getRuleByTarget(targets.head, rules, afterAnswer) match {
       case Some(rule) => checkRule(rule, context) match {
         case Checked(true) => targets match {
-          case _ :: Nil => getAnswer(rule.conclusion, targets.head._1)
+          case _ :: Nil => getAnswer(rule.conclusion, targets.head.attribute)
           case _ => consult(targets.tail, applyRule(rule, context), rules - rule)
         }
         case Checked(false) => consult(targets, context, rules - rule)
-        case Unknown(attr) => consult((attr, rule.number) :: targets, context, rules)
+        case Unknown(attr) => consult(Target(attr, rule.number) :: targets, context, rules)
       }
       case None => Question(targets, context, rules)
     }
   }
 
-  private def getRuleByTarget(target: (Attribute, Int), rules: Set[Rule], afterAnswer: Boolean): Option[Rule] =
-    if (!afterAnswer) rules.find(_.conclusion.statements.exists(_.attribute == target._1))
-    else rules.find(_.number == target._2)
+  private def getRuleByTarget(target: Target, rules: Set[Rule], afterAnswer: Boolean): Option[Rule] =
+    if (afterAnswer && target.ruleNumber != 0) rules.find(_.number == target.ruleNumber)
+    else rules.find(_.conclusion.statements.exists(_.attribute == target.attribute))
 
   trait CheckResult extends Product with Serializable
   case class Checked(isTruth: Boolean) extends CheckResult

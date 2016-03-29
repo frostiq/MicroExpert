@@ -73,16 +73,14 @@ object SwingView extends JFrame with App {
     })
 
     selectOptionButton.addActionListener (() => {
-      for (button: JRadioButton <- optionButtons.find(_.isSelected);
-           c: Core <- core)
-        result match {
-          case None => result = Some(c.consult(Attribute(button.getText)))
-          case Some(q : Question) => {
-            result = Some(c.consult(q, Value(button.getText)))
-            //todo: fill options
-          }
-          case _ =>
+      for (button: JRadioButton <- optionButtons.find(_.isSelected); c: Core <- core) {
+        result = result match {
+          case None => Some(c.consult(Attribute(button.getText)))
+          case Some(q: Question) => Some(c.consult(q, Value(button.getText)))
+          case _ => result
         }
+        updateUI(result)
+      }
     })
   }
 
@@ -116,8 +114,13 @@ object SwingView extends JFrame with App {
     parseResult
   }
 
+  def updateUI(result: Option[ConsultationResult]) =
+    for(c: Core <- core)
+      result match {
+        case Some(q : Question) => fillOptionsGroup(c.getOptions(q).map(_.value))
+      }
+
   implicit class ActionListenerProxy(f: () => Unit) extends ActionListener {
     override def actionPerformed(e: ActionEvent): Unit = f()
   }
-
 }
