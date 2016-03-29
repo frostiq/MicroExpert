@@ -18,9 +18,12 @@ package object CoreTypes {
 
   case class NoAnswer() extends ConsultationResult
 
-  case class Question(targets: TargetsStack, context: Context, rules: Set[Rule]) extends ConsultationResult
+  case class Question(targets: TargetsStack, context: Context, rules: Set[Rule]) extends ConsultationResult {
+    def currentTarget = targets.head.attribute
+  }
 
   case class Target(attribute: Attribute, ruleNumber: Int = 0)
+
 }
 
 class Core(rules: Set[Rule]) {
@@ -30,14 +33,14 @@ class Core(rules: Set[Rule]) {
   }
 
   def consult(q: Question, answer: Value): ConsultationResult = {
-    val ans = Statement(q.targets.head.attribute, answer)
+    val ans = Statement(q.currentTarget, answer)
     consult(q.targets.tail, q.context + (ans.attribute -> ans), q.rules, afterAnswer = true)
   }
 
   def getTargets: Set[Attribute] = rules.flatMap(_.conclusion.statements).map(_.attribute)
 
   def getOptions(question: Question): Set[Value] =
-    rules.flatMap(_.condition.statements).filter(_.attribute == question.targets.head.attribute).map(_.value)
+    rules.flatMap(_.condition.statements).filter(_.attribute == question.currentTarget).map(_.value)
 
   private def consult(targets: TargetsStack, context: Context, rules: Set[Rule], afterAnswer: Boolean = false): ConsultationResult = {
     getRuleByTarget(targets.head, rules, afterAnswer) match {
@@ -58,14 +61,17 @@ class Core(rules: Set[Rule]) {
     else rules.find(_.conclusion.statements.exists(_.attribute == target.attribute))
 
   trait CheckResult extends Product with Serializable
+
   case class Checked(isTruth: Boolean) extends CheckResult
+
   case class Unknown(attribute: Attribute) extends CheckResult
 
   private def checkRule(rule: Rule, context: Context): CheckResult =
-    rule.condition.statements.map(s => context get s.attribute match {
-      case Some(x) => Checked(x.value == s.value)
-      case None => Unknown(s.attribute)
-    })
+    rule.condition.statements
+      .map(s => context get s.attribute match {
+        case Some(x) => Checked(x.value == s.value)
+        case None => Unknown(s.attribute)
+      })
       .fold(Checked(true))((a: CheckResult, b: CheckResult) => a match {
         case Unknown(attr) => Unknown(attr)
         case Checked(false) => Checked(false)

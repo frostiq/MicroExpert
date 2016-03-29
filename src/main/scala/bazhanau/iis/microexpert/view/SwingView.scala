@@ -122,9 +122,11 @@ object SwingView extends JFrame with App {
     for(c: Core <- core)
       result match {
         case Some(q : Question) => {
-          fillOptionsGroup(c.getOptions(q).map(_.value))}
-          val attr = q.targets.head.attribute.value
-          attributeLabel.setText(s"Укажите значение атрибута $attr:")
+          fillOptionsGroup(c.getOptions(q).map(_.value))
+          val attr = q.currentTarget.value
+          attributeLabel.setText(s"""Укажите значение атрибута "$attr":""")
+        }
+        //case Answer(st) =>
       }
 
   implicit class ActionListenerProxy(f: () => Unit) extends ActionListener {
