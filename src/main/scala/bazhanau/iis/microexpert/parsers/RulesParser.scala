@@ -19,7 +19,7 @@ object RulesParser extends RegexParsers {
 
   def attribute : Parser[Attribute] = wordRegex ^^ {Attribute.apply}
 
-  def predicate : Parser[Predicate] = "IS" ^^ {_ => Predicate.Is}
+  def predicate : Parser[Predicate] = Predicate.Is.value ^^ {_ => Predicate.Is}
 
   def sentence : Parser[Statement] = attribute ~ predicate ~ value ^^ {
     case attribute ~ predicate ~ value => Statement(attribute, value, predicate)
@@ -33,5 +33,5 @@ object RulesParser extends RegexParsers {
     case num ~ _ ~ conditions ~ _ ~ conclusions => Rule(num, conditions, conclusions)
   }
 
-  def apply(input : String): ParseResult[List[Rule]] = parseAll(rule+, input)
+  def apply(input : String): ParseResult[List[Rule]] = parseAll(rule.+, input)
 }

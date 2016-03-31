@@ -1,6 +1,6 @@
 package bazhanau.iis.microexpert.core
 
-import bazhanau.iis.microexpert.entities.TypeDef.{Context, TargetsStack}
+import bazhanau.iis.microexpert.entities.TypeDef.{Rules, Context, TargetsStack}
 import bazhanau.iis.microexpert.entities._
 
 /**
@@ -8,7 +8,7 @@ import bazhanau.iis.microexpert.entities._
   *
   */
 
-class Core(rules: Set[Rule]) {
+class Core(rules: Rules) {
 
   def consult(attribute: Attribute): ConsultationResult = {
     consult(List(Target(attribute)), Map(), rules)
@@ -16,7 +16,7 @@ class Core(rules: Set[Rule]) {
 
   def consult(q: Question, answer: Value): ConsultationResult = {
     val ans = Statement(q.currentTarget, answer)
-    consult(q.targets.tail, q.context + (ans.attribute -> ans), q.rules, afterAnswer = true)
+    consult(q.targets.tail, q.context + (ans.attribute -> ans), q.rules, q.targets.head.ruleNumber)
   }
 
   def getTargets: Set[Attribute] = rules.flatMap(_.conclusion.statements).map(_.attribute)
@@ -24,8 +24,9 @@ class Core(rules: Set[Rule]) {
   def getOptions(question: Question): Set[Value] =
     rules.flatMap(_.condition.statements).filter(_.attribute == question.currentTarget).map(_.value)
 
-  private def consult(targets: TargetsStack, context: Context, rules: Set[Rule], afterAnswer: Boolean = false): ConsultationResult = {
-    getRuleByTarget(targets.head, rules, afterAnswer) match {
+  private def consult(targets: TargetsStack, context: Context, rules: Rules, ruleNumAfterAnswer : Int = 0): ConsultationResult = {
+    val ruleToProcess = if (ruleNumAfterAnswer != 0) rules.find(_.number == ruleNumAfterAnswer) else getRuleByTarget(targets.head, rules)
+    ruleToProcess match {
       case Some(rule) => checkRule(rule, context) match {
         case Checked(true) => targets match {
           case _ :: Nil => getAnswer(rule.conclusion, targets.head.attribute)
@@ -38,15 +39,14 @@ class Core(rules: Set[Rule]) {
     }
   }
 
-  private def getRuleByTarget(target: Target, rules: Set[Rule], afterAnswer: Boolean): Option[Rule] =
-    if (afterAnswer && target.ruleNumber != 0) rules.find(_.number == target.ruleNumber)
-    else rules.find(_.conclusion.statements.exists(_.attribute == target.attribute))
+  private def getRuleByTarget(target: Target, rules: Rules): Option[Rule] =
+    rules.find(_.conclusion.statements.exists(_.attribute == target.attribute))
 
-  trait CheckResult extends Product with Serializable
+  private trait CheckResult extends Product with Serializable
 
-  case class Checked(isTruth: Boolean) extends CheckResult
+  private case class Checked(isTruth: Boolean) extends CheckResult
 
-  case class Unknown(attribute: Attribute) extends CheckResult
+  private case class Unknown(attribute: Attribute) extends CheckResult
 
   private def checkRule(rule: Rule, context: Context): CheckResult =
     rule.condition.statements

@@ -63,12 +63,7 @@ object SwingView extends JFrame with App {
       optionsPanel.add(button)
     }
     optionsPanel.add(selectOptionButton)
-
-    cleanOptions()
-
-
     statusPanel.add(totalRulesLabel)
-
     targetStackPanel.add(new JList(targetListModel))
     contextPanel.add(new JList(contextListModel))
   }
@@ -95,6 +90,7 @@ object SwingView extends JFrame with App {
   }
 
   def finishInit(): Unit = {
+    cleanOptions()
     setTitle("Microexpert")
     setSize(400, 400)
     setLocation(200, 200)
@@ -108,7 +104,6 @@ object SwingView extends JFrame with App {
     totalRulesLabel.setText(s"Всего правил: ${parseResult.size}")
     parseResult
   }
-
 
   def updateUI(result: Option[ConsultationResult]) =
   for(c: Core <- core)
