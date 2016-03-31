@@ -10,13 +10,11 @@ import bazhanau.iis.microexpert.entities._
 
 class Core(rules: Rules) {
 
-  def consult(attribute: Attribute): ConsultationResult = {
-    consult(List(Target(attribute)), Map(), rules)
-  }
+  def consult(attribute: Attribute): ConsultationResult = consult(List(Target(attribute)), Map(), rules)
 
   def consult(q: Question, answer: Value): ConsultationResult = {
     val ans = Statement(q.currentTarget, answer)
-    consult(q.targets.tail, q.context + (ans.attribute -> ans), q.rules, q.targets.head.ruleNumber)
+    consult(q.targets.tail, q.context + (ans.attribute -> ans), q.rules, Some(q.targets.head.ruleNumber))
   }
 
   def getTargets: Set[Attribute] = rules.flatMap(_.conclusion.statements).map(_.attribute)
@@ -24,8 +22,8 @@ class Core(rules: Rules) {
   def getOptions(question: Question): Set[Value] =
     rules.flatMap(_.condition.statements).filter(_.attribute == question.currentTarget).map(_.value)
 
-  private def consult(targets: TargetsStack, context: Context, rules: Rules, ruleNumAfterAnswer : Int = 0): ConsultationResult = {
-    val ruleToProcess = if (ruleNumAfterAnswer != 0) rules.find(_.number == ruleNumAfterAnswer) else getRuleByTarget(targets.head, rules)
+  private def consult(targets: TargetsStack, context: Context, rules: Rules, ruleNumAfterAnswer : Option[Int] = None): ConsultationResult = {
+    val ruleToProcess = ruleNumAfterAnswer.map(num => rules.find(_.number == num)).getOrElse(getRuleByTarget(targets.head, rules))
     ruleToProcess match {
       case Some(rule) => checkRule(rule, context) match {
         case Checked(true) => targets match {
