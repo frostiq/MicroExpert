@@ -5,8 +5,8 @@ import java.awt.{GridLayout, BorderLayout}
 import javax.swing._
 
 import bazhanau.iis.microexpert.core.Core
-import bazhanau.iis.microexpert.core.CoreTypes.{ConsultationResult, Question, Answer, NoAnswer}
-import bazhanau.iis.microexpert.entities.{Value, Attribute}
+import bazhanau.iis.microexpert.entities.TypeDef.{TargetsStack, Context}
+import bazhanau.iis.microexpert.entities._
 import bazhanau.iis.microexpert.parsers.RulesParser
 
 /**
@@ -31,6 +31,9 @@ object SwingView extends JFrame with App {
   val optionsPanel: JPanel = new JPanel()
   val controlPanel: JPanel = new JPanel()
   val statusPanel: JPanel = new JPanel()
+
+  val targetListModel: DefaultListModel[String] = new DefaultListModel[String]()
+  val contextListModel: DefaultListModel[String] = new DefaultListModel[String]()
 
 
   var core: Option[Core] = None
@@ -65,15 +68,18 @@ object SwingView extends JFrame with App {
 
 
     statusPanel.add(totalRulesLabel)
+
+    targetStackPanel.add(new JList(targetListModel))
+    contextPanel.add(new JList(contextListModel))
   }
 
   def attachListeners(): Unit = {
 
     startButton.addActionListener (() => {
       val rules = parseRules(path)
+      totalRulesLabel.setText(s"Всего правил: ${rules.size}")
       core = Some(new Core(rules))
-      fillOptionsGroup(core.get.getTargets.map(_.value))
-      attributeLabel.setText("Выберите цель:")
+      updateUI(None)
     })
 
     selectOptionButton.addActionListener (() => {
@@ -96,21 +102,6 @@ object SwingView extends JFrame with App {
     setVisible(true)
   }
 
-  def cleanOptions(): Unit = {
-    for (button <- optionButtons) button.setVisible(false)
-    selectOptionButton.setVisible(false)
-  }
-
-  def fillOptionsGroup(options: Set[String]): Unit = {
-    cleanOptions()
-    options.zip(optionButtons).foreach(x => {
-      val (str, button) = x
-      button.setText(str)
-      button.setVisible(true)
-    })
-    selectOptionButton.setVisible(true)
-  }
-
   def parseRules(path: String) = {
     val content = scala.io.Source.fromFile(path).mkString
     val parseResult = RulesParser(content).getOrElse(List()).toSet
@@ -118,16 +109,58 @@ object SwingView extends JFrame with App {
     parseResult
   }
 
+
   def updateUI(result: Option[ConsultationResult]) =
-    for(c: Core <- core)
-      result match {
-        case Some(q : Question) => {
-          fillOptionsGroup(c.getOptions(q).map(_.value))
-          val attr = q.currentTarget.value
-          attributeLabel.setText(s"""Укажите значение атрибута "$attr":""")
-        }
-        //case Answer(st) =>
-      }
+  for(c: Core <- core)
+  result match {
+    case None =>
+      fillOptionsGroup(core.get.getTargets.map(_.value), "Выберите цель:")
+      targetListModel.clear()
+      contextListModel.clear()
+    case Some(q : Question) =>
+      val attr = q.currentTarget.value
+      val caption = s"""Укажите значение атрибута "$attr":"""
+      fillOptionsGroup(c.getOptions(q).map(_.value), caption)
+      fillTargetStack(q.targets)
+      fillContext(q.context)
+    case Some(Answer(st)) =>
+      cleanOptions()
+      JOptionPane.showMessageDialog(this, st.toString, "Ответ", JOptionPane.INFORMATION_MESSAGE)
+    case Some(NoAnswer()) =>
+      cleanOptions()
+      JOptionPane.showMessageDialog(this, "Ответ не может быть получен", "Ответа нет", JOptionPane.WARNING_MESSAGE)
+  }
+
+  def fillOptionsGroup(options: Set[String], caption: String): Unit = {
+    cleanOptions()
+    options.zip(optionButtons).foreach(x => {
+      val (str, button) = x
+      button.setText(str)
+      button.setVisible(true)
+    })
+    selectOptionButton.setVisible(true)
+    attributeLabel.setText(caption)
+  }
+
+  def cleanOptions(): Unit = {
+    for (button <- optionButtons) button.setVisible(false)
+    selectOptionButton.setVisible(false)
+    attributeLabel.setText("")
+  }
+
+  def fillTargetStack(targets: TargetsStack) : Unit = {
+    targetListModel.clear()
+    for(target <- targets){
+      targetListModel.addElement(target.toString)
+    }
+  }
+
+  def fillContext(context: Context) : Unit = {
+    contextListModel.clear()
+    for(entry <- context){
+      contextListModel.addElement(entry.toString())
+    }
+  }
 
   implicit class ActionListenerProxy(f: () => Unit) extends ActionListener {
     override def actionPerformed(e: ActionEvent): Unit = f()

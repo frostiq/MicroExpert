@@ -1,30 +1,12 @@
 package bazhanau.iis.microexpert.core
 
-import bazhanau.iis.microexpert.core.CoreTypes._
+import bazhanau.iis.microexpert.entities.TypeDef.{Context, TargetsStack}
 import bazhanau.iis.microexpert.entities._
 
 /**
   * Created by a.bazhanau on 27.03.16.
   *
   */
-
-package object CoreTypes {
-  type TargetsStack = List[Target]
-  type Context = Map[Attribute, Statement]
-
-  trait ConsultationResult
-
-  case class Answer(statement: Statement) extends ConsultationResult
-
-  case class NoAnswer() extends ConsultationResult
-
-  case class Question(targets: TargetsStack, context: Context, rules: Set[Rule]) extends ConsultationResult {
-    def currentTarget = targets.head.attribute
-  }
-
-  case class Target(attribute: Attribute, ruleNumber: Int = 0)
-
-}
 
 class Core(rules: Set[Rule]) {
 
