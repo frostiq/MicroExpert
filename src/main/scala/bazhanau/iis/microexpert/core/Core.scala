@@ -35,7 +35,7 @@ class Core(rules: Rules) {
         case Checked(false) => consult(targets, context, rules - rule)
         case Unknown(attr) => consult(Target(attr, rule.number) :: targets, context, rules)
       }
-      case None => Question(targets, context, rules)
+      case None => if (targets.tail.nonEmpty) Question(targets, context, rules) else NoAnswer()
     }
   }
 
