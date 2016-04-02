@@ -1,7 +1,7 @@
 package bazhanau.iis.microexpert.view
 
 import java.awt.event.{ActionEvent, ActionListener}
-import java.awt.BorderLayout
+import java.awt.{Color, BorderLayout}
 import javax.swing._
 
 import bazhanau.iis.microexpert.core.Core
@@ -40,9 +40,10 @@ object SwingView extends JFrame with App {
   val fileChooser: JFileChooser = new JFileChooser
 
   linkComponents()
+  setStyles()
   attachListeners()
   finishInit()
-
+  
   def linkComponents(): Unit = {
     setLayout(new BorderLayout())
     add(targetStackPanel, BorderLayout.WEST)
@@ -73,6 +74,15 @@ object SwingView extends JFrame with App {
     contextPanel.add(new JList(contextListModel))
   }
 
+  def setStyles(): Unit = {
+    val panels = List(targetStackPanel, contextPanel, optionsPanel, controlPanel, statusPanel)
+    for (panel <- panels) {
+      val border = BorderFactory.createLineBorder(Color.DARK_GRAY)
+      val margin = BorderFactory.createEmptyBorder(4,4,4,4)
+      panel.setBorder(BorderFactory.createCompoundBorder(border, margin))
+    }
+  }
+
   def attachListeners(): Unit = {
 
     startButton.addActionListener (() => {
@@ -97,7 +107,7 @@ object SwingView extends JFrame with App {
   def finishInit(): Unit = {
     cleanOptions()
     setTitle("Microexpert")
-    setSize(1200, 600)
+    setSize(700, 400)
     setLocationByPlatform(true)
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
     setVisible(true)
