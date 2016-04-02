@@ -34,7 +34,7 @@ object SwingView extends JFrame with App {
   var result: Option[ConsultationResult] = None
 
   var path: String = "rules.txt"
-  val fileChooser: JFileChooser = new JFileChooser
+  val fileChooser: JFileChooser = new JFileChooser(System.getProperty("user.dir"))
 
   linkComponents()
   setStyles()
@@ -98,6 +98,11 @@ object SwingView extends JFrame with App {
         }
         updateUI(result)
       }
+    })
+
+    chooseFileButton.addActionListener(() => {
+      if(fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+        path = fileChooser.getSelectedFile.getAbsolutePath
     })
   }
 
