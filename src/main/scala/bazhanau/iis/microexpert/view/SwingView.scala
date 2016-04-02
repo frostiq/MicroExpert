@@ -133,7 +133,7 @@ object SwingView extends JFrame with App {
 
   def fillOptionsGroup(options: Set[String], caption: String): Unit = {
     cleanOptions()
-    options.zip(optionButtons).foreach(x => {
+    (options + "другое").zip(optionButtons).foreach(x => {
       val (str, button) = x
       button.setText(str)
       button.setVisible(true)
