@@ -11,17 +11,15 @@ object RulesParser extends RegexParsers {
 
   override def skipWhitespace: Boolean = true
 
-  def wordRegex = """[а-яa-z0-9 ]*[а-яa-z0-9]""".r
+  def valueRegex = """[а-яa-z0-9 ]*[а-яa-z0-9]""".r
 
   def number: Parser[Int] = """\d+""".r ^^ { _.toInt  }
 
-  def value : Parser[Value] = wordRegex ^^ {Value.apply}
-
-  def attribute : Parser[Attribute] = wordRegex ^^ {Attribute.apply}
+  def attribute : Parser[Attribute] = valueRegex ^^ {Attribute.apply}
 
   def predicate : Parser[Predicate] = Predicate.Is.value ^^ {_ => Predicate.Is}
 
-  def sentence : Parser[Statement] = attribute ~ predicate ~ value ^^ {
+  def sentence : Parser[Statement] = attribute ~ predicate ~ valueRegex ^^ {
     case attribute ~ predicate ~ value => Statement(attribute, value, predicate)
   }
 

@@ -1,7 +1,7 @@
 package bazhanau.iis.microexpert.view
 
 import java.awt.event.{ActionEvent, ActionListener}
-import java.awt.{GridLayout, BorderLayout}
+import java.awt.BorderLayout
 import javax.swing._
 
 import bazhanau.iis.microexpert.core.Core
@@ -24,8 +24,6 @@ object SwingView extends JFrame with App {
   val startButton: JButton = new JButton("Начать консультацию")
   val chooseFileButton: JButton = new JButton("Выбрать файл")
 
-  val fileChooser: JFileChooser = new JFileChooser
-
   val targetStackPanel: JPanel = new JPanel()
   val contextPanel: JPanel = new JPanel()
   val optionsPanel: JPanel = new JPanel()
@@ -35,10 +33,11 @@ object SwingView extends JFrame with App {
   val targetListModel: DefaultListModel[String] = new DefaultListModel[String]()
   val contextListModel: DefaultListModel[String] = new DefaultListModel[String]()
 
-
   var core: Option[Core] = None
   var result: Option[ConsultationResult] = None
+
   var path: String = "rules.txt"
+  val fileChooser: JFileChooser = new JFileChooser
 
   linkComponents()
   attachListeners()
@@ -52,11 +51,11 @@ object SwingView extends JFrame with App {
     add(controlPanel, BorderLayout.NORTH)
     add(statusPanel, BorderLayout.SOUTH)
 
-    controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.LINE_AXIS))
-    contextPanel.add(chooseFileButton)
+    controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.X_AXIS))
+    controlPanel.add(chooseFileButton)
     controlPanel.add(startButton)
 
-    optionsPanel.setLayout(new GridLayout(MAX_ANSWERS_SIZE + 1, 1))
+    optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS))
     optionsPanel.add(attributeLabel)
     for (button <- optionButtons) {
       optionGroup.add(button)
@@ -64,7 +63,13 @@ object SwingView extends JFrame with App {
     }
     optionsPanel.add(selectOptionButton)
     statusPanel.add(totalRulesLabel)
+
+    targetStackPanel.setLayout(new BoxLayout(targetStackPanel, BoxLayout.Y_AXIS))
+    targetStackPanel.add(new JLabel("Стек целей:"))
     targetStackPanel.add(new JList(targetListModel))
+
+    contextPanel.setLayout(new BoxLayout(contextPanel, BoxLayout.Y_AXIS))
+    contextPanel.add(new JLabel("Контекст:"))
     contextPanel.add(new JList(contextListModel))
   }
 
@@ -81,7 +86,7 @@ object SwingView extends JFrame with App {
       for (button: JRadioButton <- optionButtons.find(_.isSelected); c: Core <- core) {
         result = result match {
           case None => Some(c.consult(Attribute(button.getText)))
-          case Some(q: Question) => Some(c.consult(q, Value(button.getText)))
+          case Some(q: Question) => Some(c.consult(q, button.getText))
           case _ => result
         }
         updateUI(result)
@@ -92,8 +97,8 @@ object SwingView extends JFrame with App {
   def finishInit(): Unit = {
     cleanOptions()
     setTitle("Microexpert")
-    setSize(400, 400)
-    setLocation(200, 200)
+    setSize(1200, 600)
+    setLocationByPlatform(true)
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
     setVisible(true)
   }
@@ -115,13 +120,13 @@ object SwingView extends JFrame with App {
     case Some(q : Question) =>
       val attr = q.currentTarget.value
       val caption = s"""Укажите значение атрибута "$attr":"""
-      fillOptionsGroup(c.getOptions(q).map(_.value), caption)
+      fillOptionsGroup(c.getOptions(q), caption)
       fillTargetStack(q.targets)
       fillContext(q.context)
     case Some(Answer(st)) =>
       cleanOptions()
       JOptionPane.showMessageDialog(this, st.toString, "Ответ", JOptionPane.INFORMATION_MESSAGE)
-    case Some(NoAnswer()) =>
+    case _ =>
       cleanOptions()
       JOptionPane.showMessageDialog(this, "Ответ не может быть получен", "Ответа нет", JOptionPane.WARNING_MESSAGE)
   }
@@ -141,6 +146,7 @@ object SwingView extends JFrame with App {
     for (button <- optionButtons) button.setVisible(false)
     selectOptionButton.setVisible(false)
     attributeLabel.setText("")
+    optionGroup.clearSelection()
   }
 
   def fillTargetStack(targets: TargetsStack) : Unit = {
@@ -153,7 +159,7 @@ object SwingView extends JFrame with App {
   def fillContext(context: Context) : Unit = {
     contextListModel.clear()
     for(entry <- context){
-      contextListModel.addElement(entry.toString())
+      contextListModel.addElement(entry._2.toString)
     }
   }
 

@@ -12,14 +12,14 @@ class Core(rules: Rules) {
 
   def consult(attribute: Attribute): ConsultationResult = consult(List(Target(attribute)), Map(), rules)
 
-  def consult(q: Question, answer: Value): ConsultationResult = {
+  def consult(q: Question, answer: String): ConsultationResult = {
     val ans = Statement(q.currentTarget, answer)
     consult(q.targets.tail, q.context + (ans.attribute -> ans), q.rules, Some(q.targets.head.ruleNumber))
   }
 
   def getTargets: Set[Attribute] = rules.flatMap(_.conclusion.statements).map(_.attribute)
 
-  def getOptions(question: Question): Set[Value] =
+  def getOptions(question: Question): Set[String] =
     rules.flatMap(_.condition.statements).filter(_.attribute == question.currentTarget).map(_.value)
 
   private def consult(targets: TargetsStack, context: Context, rules: Rules, ruleNumAfterAnswer : Option[Int] = None): ConsultationResult = {
