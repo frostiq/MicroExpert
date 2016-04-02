@@ -1,6 +1,4 @@
-package bazhanau.iis.microexpert.parsers
-
-import bazhanau.iis.microexpert.entities._
+package bazhanau.iis.microexpert
 
 import scala.util.parsing.combinator.RegexParsers
 

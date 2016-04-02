@@ -1,7 +1,6 @@
-package bazhanau.iis.microexpert.core
+package bazhanau.iis.microexpert
 
-import bazhanau.iis.microexpert.entities.TypeDef.{Rules, Context, TargetsStack}
-import bazhanau.iis.microexpert.entities._
+import bazhanau.iis.microexpert.TypeDef.{Context, TargetsStack, Rules}
 
 /**
   * Created by a.bazhanau on 27.03.16.

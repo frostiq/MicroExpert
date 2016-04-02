@@ -1,13 +1,10 @@
-package bazhanau.iis.microexpert.view
+package bazhanau.iis.microexpert
 
 import java.awt.event.{ActionEvent, ActionListener}
-import java.awt.{Color, BorderLayout}
+import java.awt.{BorderLayout, Color}
 import javax.swing._
 
-import bazhanau.iis.microexpert.core.Core
-import bazhanau.iis.microexpert.entities.TypeDef.{TargetsStack, Context}
-import bazhanau.iis.microexpert.entities._
-import bazhanau.iis.microexpert.parsers.RulesParser
+import bazhanau.iis.microexpert.TypeDef.{Context, TargetsStack}
 
 /**
   * Created by a.bazhanau on 27.03.16.
