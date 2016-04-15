@@ -86,7 +86,7 @@ object SwingView extends JFrame with App {
       val rules = parseRules(path)
       totalRulesLabel.setText(s"Всего правил: ${rules.size}")
       core = Some(new Core(rules))
-      updateUI(None)
+      updateUI()
     })
 
     selectOptionButton.addActionListener (() => {
@@ -96,7 +96,7 @@ object SwingView extends JFrame with App {
           case Some(q: Question) => Some(c.consult(q, button.getText))
           case _ => result
         }
-        updateUI(result)
+        updateUI()
       }
     })
 
@@ -122,25 +122,28 @@ object SwingView extends JFrame with App {
     parseResult
   }
 
-  def updateUI(result: Option[ConsultationResult]) =
-  for(c: Core <- core)
-  result match {
-    case None =>
-      fillOptionsGroup(core.get.getTargets.map(_.value), "Выберите цель:")
-      targetListModel.clear()
-      contextListModel.clear()
-    case Some(q : Question) =>
-      val attr = q.currentTarget.value
-      val caption = s"""Укажите значение атрибута "$attr":"""
-      fillOptionsGroup(c.getOptions(q), caption)
-      fillTargetStack(q.targets)
-      fillContext(q.context)
-    case Some(Answer(st)) =>
-      cleanOptions()
-      JOptionPane.showMessageDialog(this, st.toString, "Ответ", JOptionPane.INFORMATION_MESSAGE)
-    case _ =>
-      cleanOptions()
-      JOptionPane.showMessageDialog(this, "Ответ не может быть получен", "Ответа нет", JOptionPane.WARNING_MESSAGE)
+  def updateUI() =
+  for(c: Core <- core) {
+    result match {
+      case None =>
+        fillOptionsGroup(core.get.getTargets.map(_.value), "Выберите цель:")
+        targetListModel.clear()
+        contextListModel.clear()
+      case Some(q: Question) =>
+        val attr = q.currentTarget.value
+        val caption = s"""Укажите значение атрибута "$attr":"""
+        fillOptionsGroup(c.getOptions(q), caption)
+        fillTargetStack(q.targets)
+        fillContext(q.context)
+      case Some(Answer(st)) =>
+        cleanOptions()
+        JOptionPane.showMessageDialog(this, st.toString, "Ответ", JOptionPane.INFORMATION_MESSAGE)
+        result = None
+      case _ =>
+        cleanOptions()
+        JOptionPane.showMessageDialog(this, "Ответ не может быть получен", "Ответа нет", JOptionPane.WARNING_MESSAGE)
+        result = None
+    }
   }
 
   def fillOptionsGroup(options: Set[String], caption: String): Unit = {
